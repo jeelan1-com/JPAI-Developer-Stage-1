@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-JFO — JeelanPro Fly OffCoder
-Terminal AI Assistant · Powered by ZhipuAI GLM Models
+JPAI Agentic AI by JeelanPro™ AI Team
+Modern IDE-style Terminal AI Assistant · Powered by ZhipuAI GLM Models
 
-Run:  python.exe JPAI.py
+Run:  python.exe JPAI1.py
 """
 
 import os
@@ -11,9 +11,12 @@ import sys
 import json
 import time
 import subprocess
+import threading
+import queue
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Any, Generator
+from typing import Optional, Any, Generator, Dict, List
+from collections import deque
 
 import httpx
 
@@ -22,13 +25,18 @@ from textual.widgets import (
     Header, Footer, TabbedContent, TabPane,
     Input, Button, Static, Collapsible,
     RichLog, Select, TextArea,
-    Label,
+    Label, DirectoryTree, Tree, LoadingIndicator,
+    ContentSwitcher, ProgressBar,
 )
 from textual.containers import (
-    Container, Horizontal, Vertical, VerticalScroll,
+    Container, Horizontal, Vertical, VerticalScroll, HorizontalScroll,
+    Grid, ScrollableContainer,
 )
 from textual.reactive import reactive
 from textual import work
+from textual.binding import Binding
+from textual.screen import ModalScreen, Screen
+from textual.message import Message
 
 
 # ═══════════════════════════════════════════════════════════
@@ -38,21 +46,21 @@ from textual import work
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "Data"
 CHAT_DIR = DATA_DIR / "chats"
+PROJECTS_DIR = DATA_DIR / "projects"
 SETTINGS_PATH = DATA_DIR / "settings.json"
 TOOLS_PATH = DATA_DIR / "tools.json"
 API_KEY_FILE = DATA_DIR / "api_key.txt"
 
 DATA_DIR.mkdir(exist_ok=True)
 CHAT_DIR.mkdir(exist_ok=True)
+PROJECTS_DIR.mkdir(exist_ok=True)
 
 BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 
+# Only free models with 1 request at a time
 MODELS = [
-    "glm-4.7-flash",
-    "glm-4.7",
-    "glm-4.6",
-    "glm-4.5",
-    "glm-5.1",
+    "glm-4.5-flash",
+    "glm-4.7-flash", 
     "glm-4.6v-flash",
 ]
 
